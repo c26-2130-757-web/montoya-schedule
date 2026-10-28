@@ -1,0 +1,436 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Weekwise</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;600;700&display=swap">
+<style>
+/* Weekly class schedule: layout is one dense timetable, color-coded by course type */
+:root {
+  --paper: #f3f5f9;
+  --ink: #17203d;
+  --muted: #5d6784;
+  --line: #cfd6e4;
+  --head-bg: #1c2a5e;
+  --head-fg: #ffffff;
+  --time-bg: #e4e9f4;
+  --free-bg: #fafbfd;
+  --cs-bg: #d6e4ff;
+  --cs-edge: #2f5fd0;
+  --ge-bg: #fbe6c2;
+  --ge-edge: #b56a00;
+  --pe-bg: #d3efdc;
+  --pe-edge: #1f8049;
+  --font-body: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Consolas", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1424;
+    --ink: #e8ecf8;
+    --muted: #9aa5c6;
+    --line: #2c3659;
+    --head-bg: #3b4f9c;
+    --head-fg: #ffffff;
+    --time-bg: #182040;
+    --free-bg: #121932;
+    --cs-bg: #1d3470;
+    --cs-edge: #7fa4ff;
+    --ge-bg: #4a3512;
+    --ge-edge: #f0b25a;
+    --pe-bg: #17402b;
+    --pe-edge: #62d08e;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0f1424;
+  --ink: #e8ecf8;
+  --muted: #9aa5c6;
+  --line: #2c3659;
+  --head-bg: #3b4f9c;
+  --head-fg: #ffffff;
+  --time-bg: #182040;
+  --free-bg: #121932;
+  --cs-bg: #1d3470;
+  --cs-edge: #7fa4ff;
+  --ge-bg: #4a3512;
+  --ge-edge: #f0b25a;
+  --pe-bg: #17402b;
+  --pe-edge: #62d08e;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.4;
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin: 0 0 4px;
+  text-wrap: balance;
+}
+
+.sub {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.legend li::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-left: 4px solid;
+  vertical-align: -1px;
+}
+
+.legend .cs::before { background: var(--cs-bg); border-color: var(--cs-edge); }
+.legend .ge::before { background: var(--ge-bg); border-color: var(--ge-edge); }
+.legend .pe::before { background: var(--pe-bg); border-color: var(--pe-edge); }
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+
+table.schedule {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+table.schedule caption {
+  caption-side: top;
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 600;
+  background: var(--time-bg);
+  border-bottom: 1px solid var(--line);
+}
+
+table.schedule th,
+table.schedule td {
+  border: 1px solid var(--line);
+  padding: 0 8px;
+}
+
+table.schedule thead th {
+  background: var(--head-bg);
+  color: var(--head-fg);
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+table.schedule thead th:first-child {
+  width: 78px;
+}
+
+table.schedule tbody tr {
+  height: 28px;
+}
+
+table.schedule tbody th {
+  background: var(--time-bg);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+table.schedule td.free {
+  background: var(--free-bg);
+}
+
+table.schedule td.class {
+  padding: 6px 8px;
+  vertical-align: top;
+  border-left-width: 4px;
+  font-size: 12.5px;
+}
+
+table.schedule td.class strong {
+  display: block;
+  font-size: 13px;
+}
+
+table.schedule td.class .room,
+table.schedule td.class .time {
+  display: block;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+td.cs { background: var(--cs-bg); border-left-color: var(--cs-edge); }
+td.ge { background: var(--ge-bg); border-left-color: var(--ge-edge); }
+td.pe { background: var(--pe-bg); border-left-color: var(--pe-edge); }
+
+@media (prefers-reduced-motion: no-preference) {
+  table.schedule td.class {
+    transition: filter 0.15s;
+  }
+  table.schedule td.class:hover {
+    filter: brightness(0.96);
+  }
+}
+
+</style>
+<div class="page">
+  <h1>Weekly Class Schedule</h1>
+  <p class="sub">John Derek Montoya &middot; Week of Jul 26 &ndash; Aug 1, 2026</p>
+  <ul class="legend">
+    <li class="cs">Computing and IT</li>
+    <li class="ge">General education</li>
+    <li class="pe">PE and NSTP</li>
+  </ul>
+  <div class="table-wrap">
+  <table class="schedule">
+    <caption>Weekly class schedule of John Derek Montoya, Monday to Saturday, 7:00 am to 8:30 pm (Philippine Standard Time)</caption>
+    <thead>
+      <tr>
+        <th scope="col">Time</th>
+        <th scope="col" abbr="Monday">Mon</th>
+        <th scope="col" abbr="Tuesday">Tue</th>
+        <th scope="col" abbr="Wednesday">Wed</th>
+        <th scope="col" abbr="Thursday">Thu</th>
+        <th scope="col" abbr="Friday">Fri</th>
+        <th scope="col" abbr="Saturday">Sat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">7:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="class pe" rowspan="6"><strong>NST100</strong>National Service Training Program I<span class="room">Quadrangle College Bldg</span><span class="time">7-10am</span></td>
+      </tr>
+      <tr>
+        <th scope="row">7:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">8:00</th>
+        <td class="free"></td>
+        <td class="class cs" rowspan="4"><strong>CCS1102</strong>Fundamentals of Programming (Lec)<span class="room">Rm 341</span><span class="time">8-10am</span></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">8:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">9:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="class cs" rowspan="6"><strong>CCS1102</strong>Fundamentals of Programming (Lab)<span class="room">C.Lab 3</span><span class="time">9am-12pm</span></td>
+      </tr>
+      <tr>
+        <th scope="row">9:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">10:00</th>
+        <td class="free"></td>
+        <td class="class pe" rowspan="4"><strong>PATHFIT1</strong>Physical Activities Towards Health and Fitness<span class="room">Gym</span><span class="time">10am-12pm</span></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">10:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">11:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">11:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">12:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">12:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">1:00</th>
+        <td class="class ge" rowspan="3"><strong>GEC500</strong>Mathematics in the Modern World<span class="room">Rm 316</span><span class="time">1-2:30pm</span></td>
+        <td class="class cs" rowspan="6"><strong>BIT1101</strong>Information Assurance in Security 1<span class="room">C.Lab 2</span><span class="time">1-4pm</span></td>
+        <td class="free"></td>
+        <td class="class ge" rowspan="3"><strong>GEC500</strong>Mathematics in the Modern World<span class="room">Rm 316</span><span class="time">1-2:30pm</span></td>
+        <td class="class cs" rowspan="6"><strong>CCS1101L</strong>Introduction to Computing (Lab)<span class="room">Mac Lab</span><span class="time">1-4pm</span></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">1:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">2:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">2:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">3:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="class cs" rowspan="4"><strong>CCS1101</strong>Introduction to Computing (Lec)<span class="room">Rm 344</span><span class="time">3-5pm</span></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">3:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">4:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">4:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">5:00</th>
+        <td class="class ge" rowspan="3"><strong>GEC100</strong>Art Appreciation<span class="room">Rm 341</span><span class="time">5-6:30pm</span></td>
+        <td class="class ge" rowspan="3"><strong>GEE300</strong>Gender and Society<span class="room">Rm 342</span><span class="time">5-6:30pm</span></td>
+        <td class="free"></td>
+        <td class="class ge" rowspan="3"><strong>GEC100</strong>Art Appreciation<span class="room">Rm 341</span><span class="time">5-6:30pm</span></td>
+        <td class="class ge" rowspan="3"><strong>GEE300</strong>Gender and Society<span class="room">Rm 342</span><span class="time">5-6:30pm</span></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">5:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">6:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">6:30</th>
+        <td class="class ge" rowspan="4"><strong>FCL100</strong>The Perpetualite: The Identity and Dignity<span class="room">Rm 344</span><span class="time">6:30-8:30pm</span></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">7:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">7:30</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+      <tr>
+        <th scope="row">8:00</th>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+        <td class="free"></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+</body></html>
